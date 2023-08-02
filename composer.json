@@ -1,0 +1,22 @@
+{
+    "name": "exposuresoftware/versioner",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "ExposureSoftware\\Versioner\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Marshall Davis",
+            "email": "marshall@exposuresoftware.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.2"
+    }
+}
