@@ -2,38 +2,36 @@
 
 namespace ExposureSoftware\Versioner;
 
-use ReflectionClass;
-use ReflectionException;
 use Stringable;
 
-readonly class VersionString implements Stringable
+class VersionString implements Stringable
 {
-    private int $major;
-    private int $minor;
-    private int $patch;
+    private int $major = 0;
+    private int $minor = 0;
+    private int $patch = 0;
 
-    public string $original;
+    public readonly string $original;
 
-    private ?string $prefix;
+    private readonly ?string $prefix;
+
+    private ?string $build;
 
     private ?string $suffix;
     private bool $preserveSuffix;
 
     public function __construct(
-        string       $version,
+        string $version,
     )
     {
         $this->original = $version;
         $this->prefix = preg_replace('/\d.*$/', '', $version);
-        // Remove the build metadata.
-        preg_replace('/.+?[+]/', '', $version);
-        $this->suffix = preg_replace('/.+?[-]/', '', $version);
+        $this->build = preg_replace('/.+?[+]/', '', $version);
+        $this->suffix = preg_replace('/.+?[-]/', '', preg_replace('/\+.*$/', '', $version));
 
-        while (count(explode('.', $version)) < 3) {
-            $version .= '.0';
-        }
-
-        [$this->major, $this->minor, $this->patch] = explode('.', $version);
+        [$this->major, $this->minor, $this->patch] = array_map(
+            fn(string $segment) => (int)$segment,
+            explode('.', preg_replace('/[^0-9.]*([0-9.]+).*/', '$1', $version))
+        );
         $this->preserveSuffix = false;
     }
 
@@ -42,32 +40,62 @@ readonly class VersionString implements Stringable
         return new static($version);
     }
 
-    /**
-     * @throws ReflectionException
-     *
-     * @link https://github.com/spatie/php-cloneable/blob/3ffb6eb6caf8d41f916cc0ff39c6853363bc9992/src/Cloneable.php
-     */
-    protected function newInstance(...$overrides): static
+    public static function minor(string $original): string
     {
-        $reflection = (new ReflectionClass(static::class));
-        $clone = $reflection->newInstanceWithoutConstructor();
+        return (new static($original))->bump(VersionSegment::MINOR);
+    }
 
-        foreach (get_object_vars($this) as $property => $value) {
-            $value = array_key_exists($property, $overrides) ? $overrides[$property] : $value;
-            $scope = $reflection->getProperty($property)->getDeclaringClass()->getName();
+    public static function major(string $original): string
+    {
+        return (new static($original))->bump(VersionSegment::MAJOR);
+    }
 
-            if ($scope === self::class) {
-                $clone->$property = $value;
-            } else {
-                (fn () => $this->$property = $value)->bindTo($clone, $scope);
-            }
-        }
+    public static function patch(string $original): string
+    {
+        return (new static($original))->bump(VersionSegment::PATCH);
+    }
 
-        return $clone;
+    public function bump(VersionSegment $segment): static
+    {
+        $this->clearExtensions();
+
+        match ($segment) {
+            VersionSegment::MAJOR => $this->set(++$this->major, 0, 0),
+            VersionSegment::MINOR => $this->set($this->major, ++$this->minor, 0),
+            VersionSegment::PATCH => $this->patch++
+        };
+
+        return $this;
+    }
+
+    public function preserveSuffix(): static
+    {
+        $this->preserveSuffix = true;
+
+        return $this;
     }
 
     public function __toString(): string
     {
-        return trim($this->prefix . $this->major . $this->minor . $this->patch . '-' . $this->suffix, ['.', '-']);
+        return trim(
+            implode('.', [$this->prefix . $this->major, $this->minor, $this->patch]) . '-' . $this->suffix . '+' . $this->build,
+            '.-+'
+        );
+    }
+
+    protected function set(int $major, int $minor, int $patch): static
+    {
+        $this->major = $major;
+        $this->minor = $minor;
+        $this->patch = $patch;
+        return $this;
+    }
+
+    protected function clearExtensions(): void
+    {
+        if ($this->preserveSuffix === false) {
+            $this->suffix = null;
+        }
+        $this->build = null;
     }
 }
