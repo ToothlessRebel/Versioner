@@ -6,9 +6,9 @@ use Stringable;
 
 class VersionString implements Stringable
 {
-    private int $major = 0;
-    private int $minor = 0;
-    private int $patch = 0;
+    private ?int $major = 0;
+    private ?int $minor = 0;
+    private ?int $patch = 0;
 
     public readonly string $original;
 
@@ -25,14 +25,21 @@ class VersionString implements Stringable
     {
         $this->original = $version;
         $this->prefix = preg_replace('/\d.*$/', '', $version);
-        $this->build = preg_replace('/.+?[+]/', '', $version);
-        $this->suffix = preg_replace('/.+?[-]/', '', preg_replace('/\+.*$/', '', $version));
+        [$version, $this->build] = array_pad(explode('+', $version, 2), 2, null);
+        [$version, $this->suffix] = array_pad(explode('-', $version, 2), 2, null);
 
-        [$this->major, $this->minor, $this->patch] = array_map(
-            fn(string $segment) => (int)$segment,
-            explode('.', preg_replace('/[^0-9.]*([0-9.]+).*/', '$1', $version))
+        [$this->major, $this->minor, $this->patch] = array_pad(
+            array_map(
+                fn(string $segment) => (int)$segment,
+                explode('.', preg_replace('/[^0-9.]*([0-9.]+).*/', '$1', $version))
+            ),
+            3,
+            0
         );
         $this->preserveSuffix = false;
+        $this->patch ??= 0;
+        $this->minor ??= 0;
+        $this->major ??= 0;
     }
 
     public static function original(string $version): static
@@ -78,7 +85,21 @@ class VersionString implements Stringable
     public function __toString(): string
     {
         return trim(
-            implode('.', [$this->prefix . $this->major, $this->minor, $this->patch]) . '-' . $this->suffix . '+' . $this->build,
+            trim(
+                implode(
+                    '.',
+                    [
+                        $this->prefix . $this->major,
+                        $this->minor,
+                        $this->patch
+                    ]
+                )
+                . '-'
+                . $this->suffix,
+                '-'
+            )
+            . '+'
+            . $this->build,
             '.-+'
         );
     }
