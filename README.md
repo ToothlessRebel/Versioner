@@ -14,16 +14,16 @@ composer require exposuresoftware/versioner
 Simply provide the current version and use the helper methods to increment segments.
 
 ```php
-VersionString::patch('v1.0.0'); // 'v1.0.1'
-VersionString::minor('v1.0.0'); // 'v1.1.0'
-VersionString::major('v0.1.30-alpha'); // 'v2.0.0'
+VersionString::incrementPatch('v1.0.0'); // 'v1.0.1'
+VersionString::incrementMinor('v1.0.0'); // 'v1.1.0'
+VersionString::incrementMajor('v0.1.30-alpha'); // 'v2.0.0'
 ```
 
 Note that any version bump will remove the pre-release label and/or build data if any were included.  
 If you wish to keep the pre-release label you can do so:
 
 ```php
-(string)(new VersionString('v2.0.0-alpha'))->preserveSuffix()->bump(VersionSegment::MINOR); // 'v2.1.0-alpha'
+(string)(new VersionString('v2.0.0-alpha'))->preserveSuffix()->increment(VersionSegment::MINOR); // 'v2.1.0-alpha'
 ```
 
 ## Credits

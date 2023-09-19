@@ -47,22 +47,22 @@ class VersionString implements Stringable
         return new static($version);
     }
 
-    public static function minor(string $original): string
+    public static function incrementMinor(string $original): string
     {
-        return (new static($original))->bump(VersionSegment::MINOR);
+        return (new static($original))->increment(VersionSegment::MINOR);
     }
 
-    public static function major(string $original): string
+    public static function incrementMajor(string $original): string
     {
-        return (new static($original))->bump(VersionSegment::MAJOR);
+        return (new static($original))->increment(VersionSegment::MAJOR);
     }
 
-    public static function patch(string $original): string
+    public static function incrementPatch(string $original): string
     {
-        return (new static($original))->bump(VersionSegment::PATCH);
+        return (new static($original))->increment(VersionSegment::PATCH);
     }
 
-    public function bump(VersionSegment $segment): static
+    public function increment(VersionSegment $segment): static
     {
         $this->clearExtensions();
 

@@ -18,19 +18,19 @@ class VersionStringTest extends TestCase
     #[DataProvider('segments')]
     public function testCanBump(VersionSegment $segment, string $original, string $expected): void
     {
-        $this->assertSame($expected, (string)(new VersionString($original))->bump($segment));
+        $this->assertSame($expected, (string)(new VersionString($original))->increment($segment));
     }
 
     public function testClearsExtensions(): void
     {
-        $this->assertSame('0.0.1', VersionString::patch('0.0.0-alpha'));
+        $this->assertSame('0.0.1', VersionString::incrementPatch('0.0.0-alpha'));
     }
 
     public function testCanPreserveSuffix(): void
     {
         $this->assertSame(
             '0.0.1-alpha-1',
-            (string)(new VersionString('0.0.0-alpha-1'))->preserveSuffix()->bump(VersionSegment::PATCH)
+            (string)(new VersionString('0.0.0-alpha-1'))->preserveSuffix()->increment(VersionSegment::PATCH)
         );
     }
 
@@ -38,14 +38,14 @@ class VersionStringTest extends TestCase
     {
         $this->assertSame(
             'v2.0.0',
-            (string)(new VersionString('v1.1.0'))->bump(VersionSegment::MAJOR)
+            (string)(new VersionString('v1.1.0'))->increment(VersionSegment::MAJOR)
         );
     }
 
     public function testBumpResetsLowerSegments(): void
     {
-        $this->assertSame('3.0.0', VersionString::major('2.2.2'));
-        $this->assertSame('2.3.0', VersionString::minor('2.2.2'));
+        $this->assertSame('3.0.0', VersionString::incrementMajor('2.2.2'));
+        $this->assertSame('2.3.0', VersionString::incrementMinor('2.2.2'));
     }
 
     public static function segments(): array
