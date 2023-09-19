@@ -2,13 +2,16 @@
 
 namespace ExposureSoftware\Versioner;
 
+use ExposureSoftware\Versioner\Concerns\Comparisons;
 use Stringable;
 
 class VersionString implements Stringable
 {
-    private ?int $major = 0;
-    private ?int $minor = 0;
-    private ?int $patch = 0;
+    use Comparisons;
+
+    private int $major = 0;
+    private int $minor = 0;
+    private int $patch = 0;
 
     public readonly string $original;
 
@@ -37,9 +40,6 @@ class VersionString implements Stringable
             0
         );
         $this->preserveSuffix = false;
-        $this->patch ??= 0;
-        $this->minor ??= 0;
-        $this->major ??= 0;
     }
 
     public static function original(string $version): static
